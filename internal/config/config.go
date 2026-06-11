@@ -25,22 +25,37 @@ func Load() Config {
 	svcAction := flag.String("service", "", "Service action: install, start, stop, uninstall")
 	flag.Parse()
 
-	if v := os.Getenv("PORT"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil {
-			*port = n
+	// Record which flags were explicitly provided on the command line.
+	// Env vars only override flags that kept their default value.
+	set := make(map[string]bool)
+	flag.Visit(func(f *flag.Flag) { set[f.Name] = true })
+
+	if !set["port"] {
+		if v := os.Getenv("PORT"); v != "" {
+			if n, err := strconv.Atoi(v); err == nil {
+				*port = n
+			}
 		}
 	}
-	if v := os.Getenv("SERVICE_NAME"); v != "" {
-		*name = v
+	if !set["name"] {
+		if v := os.Getenv("SERVICE_NAME"); v != "" {
+			*name = v
+		}
 	}
-	if v := os.Getenv("SERVICE_DISPLAY"); v != "" {
-		*display = v
+	if !set["display"] {
+		if v := os.Getenv("SERVICE_DISPLAY"); v != "" {
+			*display = v
+		}
 	}
-	if v := os.Getenv("SERVICE_DESC"); v != "" {
-		*desc = v
+	if !set["description"] {
+		if v := os.Getenv("SERVICE_DESC"); v != "" {
+			*desc = v
+		}
 	}
-	if v := os.Getenv("LOG_LEVEL"); v != "" {
-		*logLevel = v
+	if !set["log-level"] {
+		if v := os.Getenv("LOG_LEVEL"); v != "" {
+			*logLevel = v
+		}
 	}
 
 	var level slog.Level
