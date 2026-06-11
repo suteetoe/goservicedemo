@@ -21,6 +21,8 @@ windows-amd64: $(DIST)
 windows-386: $(DIST)
 	GOOS=windows GOARCH=386   CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(DIST)/goservicedemo-386.exe      .
 
+# Note: darwin binaries link against system frameworks (libSystem, libresolv) even with
+# CGO_ENABLED=0 — this is macOS linker behavior, not a CGO dependency. They work on any macOS.
 darwin-amd64: $(DIST)
 	GOOS=darwin  GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(DIST)/goservicedemo-darwin-amd64 .
 

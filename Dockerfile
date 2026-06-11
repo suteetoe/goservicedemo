@@ -14,7 +14,11 @@ RUN go mod download
 # Copy source and build
 COPY . .
 ARG VERSION=dev
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+# TARGETOS and TARGETARCH are automatically injected by Docker BuildKit
+# when using: docker buildx build --platform linux/arm64 (etc.)
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     go build \
     -ldflags="-s -w -X main.version=${VERSION}" \
     -o goservicedemo .

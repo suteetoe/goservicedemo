@@ -38,6 +38,7 @@ func (h *handlers) listItems(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) createItem(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var body struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -63,6 +64,7 @@ func (h *handlers) getItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) updateItem(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var body struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
