@@ -41,15 +41,15 @@ func (s *Store) Get(id string) (Item, bool) {
 }
 
 func (s *Store) Create(name, description string) Item {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	item := Item{
 		ID:          uuid.NewString(),
 		Name:        name,
 		Description: description,
 		CreatedAt:   time.Now().UTC(),
 	}
-	s.mu.Lock()
 	s.items[item.ID] = item
-	s.mu.Unlock()
 	return item
 }
 
