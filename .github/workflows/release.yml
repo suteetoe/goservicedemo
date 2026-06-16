@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  package-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - arch: arm64
+            goarch: arm64
+          - arch: amd64
+            goarch: amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build darwin binary
+        run: |
+          GOOS=darwin GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 \
+          go build \
+            -ldflags="-s -w -X main.version=${{ github.ref_name }}" \
+            -o dist/goservicedemo-darwin-${{ matrix.goarch }} .
+
+      - name: Build .pkg
+        run: make package-macos-${{ matrix.arch }} VERSION=${{ github.ref_name }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg-macos-${{ matrix.arch }}
+          path: dist/*.pkg
+
+  package-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install WiX v4
+        run: dotnet tool install --global wix
+
+      - name: Build binary and MSI
+        shell: bash
+        run: |
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
+          go build \
+            -ldflags="-s -w -X main.version=${{ github.ref_name }}" \
+            -o dist/goservicedemo.exe .
+          VER="${{ github.ref_name }}"
+          PKG_VERSION="${VER#v}"
+          wix build build/windows/goservicedemo.wxs \
+            -d DistDir=dist \
+            -d Version="$PKG_VERSION" \
+            -o "dist/goservicedemo-${{ github.ref_name }}-windows-amd64.msi"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: msi-windows-amd64
+          path: dist/*.msi
+
+  release:
+    needs: [package-macos, package-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lh artifacts/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
