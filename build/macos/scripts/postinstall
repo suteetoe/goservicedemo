@@ -1,4 +1,6 @@
 #!/bin/bash
 set -e
 mkdir -p /var/log/goservicedemo
-launchctl bootstrap system /Library/LaunchDaemons/com.goservicedemo.plist
+PLIST=/Library/LaunchDaemons/com.goservicedemo.plist
+launchctl bootout system "$PLIST" 2>/dev/null || true
+launchctl bootstrap system "$PLIST"
