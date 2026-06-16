@@ -50,7 +50,7 @@ jobs:
             -ldflags="-s -w -X main.version=${{ github.ref_name }}" \
             -o dist/goservicedemo.exe .
           VER="${{ github.ref_name }}"
-          PKG_VERSION="${VER#v}"
+          PKG_VERSION=$(echo "${VER#v}" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "0.0.1")
           wix build build/windows/goservicedemo.wxs \
             -d DistDir=dist \
             -d Version="$PKG_VERSION" \
