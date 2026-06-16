@@ -60,6 +60,13 @@ package-macos-amd64: darwin-amd64
 	  $(DIST)/goservicedemo-$(VERSION)-macos-amd64.pkg
 	@rm -rf $(PKG_STAGING)
 
+# Windows MSI (requires Windows with WiX v4: dotnet tool install --global wix)
+package-windows: windows-amd64
+	wix build build/windows/goservicedemo.wxs \
+	  -d DistDir=$(DIST) \
+	  -d Version=$(PKG_VERSION) \
+	  -o $(DIST)/goservicedemo-$(VERSION)-windows-amd64.msi
+
 docker:
 	docker build --build-arg VERSION=$(VERSION) -t goservicedemo:$(VERSION) -t goservicedemo:latest .
 
