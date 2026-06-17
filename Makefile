@@ -1,4 +1,5 @@
-.PHONY: all linux-amd64 linux-arm64 windows-amd64 windows-386 darwin-amd64 darwin-arm64 docker clean
+.PHONY: all linux-amd64 linux-arm64 windows-amd64 windows-386 darwin-amd64 darwin-arm64 \
+        package-macos-arm64 package-macos-amd64 package-windows docker clean
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS  := -s -w -X main.version=$(VERSION)
@@ -28,6 +29,43 @@ darwin-amd64: $(DIST)
 
 darwin-arm64: $(DIST)
 	GOOS=darwin  GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(DIST)/goservicedemo-darwin-arm64 .
+
+# macOS pkg (requires macOS — pkgbuild is not available on Linux/Windows)
+PKG_STAGING := $(DIST)/pkg-staging
+PKG_VERSION  = $(shell echo "$(VERSION)" | sed 's/^v//' | sed 's/[^0-9.].*/.0/' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' || echo "0.0.1")
+
+package-macos-arm64: darwin-arm64
+	@mkdir -p $(PKG_STAGING)/usr/local/bin $(PKG_STAGING)/Library/LaunchDaemons
+	cp $(DIST)/goservicedemo-darwin-arm64 $(PKG_STAGING)/usr/local/bin/goservicedemo
+	cp build/macos/com.goservicedemo.plist $(PKG_STAGING)/Library/LaunchDaemons/
+	pkgbuild \
+	  --root $(PKG_STAGING) \
+	  --scripts build/macos/scripts \
+	  --identifier com.goservicedemo \
+	  --version $(PKG_VERSION) \
+	  --install-location / \
+	  $(DIST)/goservicedemo-$(VERSION)-macos-arm64.pkg
+	@rm -rf $(PKG_STAGING)
+
+package-macos-amd64: darwin-amd64
+	@mkdir -p $(PKG_STAGING)/usr/local/bin $(PKG_STAGING)/Library/LaunchDaemons
+	cp $(DIST)/goservicedemo-darwin-amd64 $(PKG_STAGING)/usr/local/bin/goservicedemo
+	cp build/macos/com.goservicedemo.plist $(PKG_STAGING)/Library/LaunchDaemons/
+	pkgbuild \
+	  --root $(PKG_STAGING) \
+	  --scripts build/macos/scripts \
+	  --identifier com.goservicedemo \
+	  --version $(PKG_VERSION) \
+	  --install-location / \
+	  $(DIST)/goservicedemo-$(VERSION)-macos-amd64.pkg
+	@rm -rf $(PKG_STAGING)
+
+# Windows MSI (requires Windows with WiX v4: dotnet tool install --global wix)
+package-windows: windows-amd64
+	wix build build/windows/goservicedemo.wxs \
+	  -d DistDir=$(DIST) \
+	  -d Version=$(PKG_VERSION) \
+	  -o $(DIST)/goservicedemo-$(VERSION)-windows-amd64.msi
 
 docker:
 	docker build --build-arg VERSION=$(VERSION) -t goservicedemo:$(VERSION) -t goservicedemo:latest .

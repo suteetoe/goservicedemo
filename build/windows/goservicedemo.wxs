@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package Name="Go Service Demo"
+           Manufacturer="goservicedemo"
+           Version="$(var.Version)"
+           UpgradeCode="7E8F9A0B-1C2D-3E4F-5A6B-7C8D9E0F1A2B">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Go Service Demo is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="INSTALLFOLDER" Name="Go Service Demo" />
+    </StandardDirectory>
+
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Guid="*">
+        <File Source="$(var.DistDir)\goservicedemo.exe" KeyPath="yes" />
+        <ServiceInstall Id="GoServiceDemoInstall"
+                        Name="goservicedemo"
+                        DisplayName="Go Service Demo"
+                        Description="A demo Go RESTful web service (HTTP CRUD, health endpoint)"
+                        Start="auto"
+                        Type="ownProcess"
+                        ErrorControl="normal"
+                        Arguments="-port 8080" />
+        <ServiceControl Id="GoServiceDemoControl"
+                        Name="goservicedemo"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Wait="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <Feature Id="MainFeature" Title="Go Service Demo" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+  </Package>
+</Wix>

@@ -313,7 +313,29 @@ Not in scope for initial implementation (the service is a reference/demo). The s
 
 ---
 
-## 14. Phase 2 — System Tray Status App (deferred)
+## 14. Phase 2 — Native Installer Packages (Windows + macOS)
+
+Produce a `.pkg` installer for macOS and an `.msi` installer for Windows that install `goservicedemo` to standard system paths and register it as a service that starts automatically on boot.
+
+**macOS `.pkg`:**
+- Payload: binary → `/usr/local/bin/goservicedemo`; launchd plist → `/Library/LaunchDaemons/com.goservicedemo.plist`
+- `preinstall` script: `launchctl bootout system /Library/LaunchDaemons/com.goservicedemo.plist` (idempotent on fresh install)
+- `postinstall` script: `launchctl bootstrap system /Library/LaunchDaemons/com.goservicedemo.plist`
+- Built with `pkgbuild` (macOS built-in). Separate packages for `arm64` and `amd64`.
+
+**Windows `.msi`:**
+- Installs `goservicedemo.exe` to `%ProgramFiles%\Go Service Demo\`
+- Registers as a Windows Service (SCM) via WiX `ServiceInstall` + `ServiceControl` elements
+- Service starts automatically on install; stops and is removed on uninstall
+- Built with WiX Toolset v4 (`wix build`) — requires Windows or a Windows CI runner
+
+**Makefile targets:** `make package-macos-arm64`, `make package-macos-amd64`, `make package-windows`
+
+**CI:** GitHub Actions workflow on `v*` tag builds both artifacts and attaches them to a GitHub Release.
+
+---
+
+## 15. Phase 3 — System Tray Status App (deferred)
 
 A separate binary (`goservicedemotray`) that displays the service status in the OS taskbar/menu bar.
 

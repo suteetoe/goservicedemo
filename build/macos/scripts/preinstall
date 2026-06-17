@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+PLIST=/Library/LaunchDaemons/com.goservicedemo.plist
+if [ -f "$PLIST" ]; then
+    launchctl bootout system "$PLIST" 2>/dev/null || true
+fi
